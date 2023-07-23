@@ -9,34 +9,31 @@ function sendReminders() {
     const enabled = settingsData[i][0]; // 有効/無効
     const sheetName = settingsData[i][1]; // シート名
     const webhookURL = settingsData[i][2]; // MattermostのWebhook URL
+    const targetSheet = spreadsheet.getSheetByName(sheetName);
 
-    // シートの探索が有効になっている場合のみ実行します
-    if (enabled === true) {
-      const targetSheet = spreadsheet.getSheetByName(sheetName);
-      if (targetSheet) {
-        // シートからイベント情報を取得します
-        const eventRange = targetSheet.getDataRange();
-        const eventValues = eventRange.getValues();
+    // enabledがfalseの場合または対象のシートが存在しない場合は処理をスキップします
+    if (!enabled || !targetSheet) continue;
 
-        // GASが実行された日付を取得します
-        const today = new Date();
-        today.setHours(0, 0, 0, 0); // 時刻を切り捨てて日付のみにします
+    const eventRange = targetSheet.getDataRange();
+    const eventValues = eventRange.getValues();
 
-        // イベント情報をチェックし、条件に合致する場合はメッセージを送信します
-        for (let row = 1; row < eventValues.length; row++) {
-          const date = new Date(eventValues[row][0]);
-          const startTime = eventValues[row][1];
-          const eventTitle = sheetName;
-          const book = eventValues[row][2];
-          const range = eventValues[row][3];
-          const remarks = eventValues[row][4] ? eventValues[row][4] : "なし";
+    // GASが実行された日付を取得します
+    const today = new Date();
+    today.setHours(0, 0, 0, 0); // 時刻を切り捨てて日付のみにします
 
-          // 日付が合致した場合にメッセージを送信します（タイムゾーンに注意）
-          if (date.getTime() === today.getTime()) {
-            const message = `今日は${startTime}から${eventTitle}があります。\n書籍：${book}（範囲：${range}）\n備考：${remarks}`;
-            sendToMattermost(webhookURL, message);
-          }
-        }
+    // イベント情報をチェックし、条件に合致する場合はメッセージを送信します
+    for (let row = 1; row < eventValues.length; row++) {
+      const date = new Date(eventValues[row][0]);
+      const startTime = eventValues[row][1];
+      const eventTitle = sheetName;
+      const book = eventValues[row][2];
+      const range = eventValues[row][3];
+      const remarks = eventValues[row][4] ? eventValues[row][4] : "なし";
+
+      // 日付が合致した場合にメッセージを送信します（タイムゾーンに注意）
+      if (date.getTime() === today.getTime()) {
+        const message = `今日は${startTime}から${eventTitle}があります。\n書籍：${book}（範囲：${range}）\n備考：${remarks}`;
+        sendToMattermost(webhookURL, message);
       }
     }
   }
