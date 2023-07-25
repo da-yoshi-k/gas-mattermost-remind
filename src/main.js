@@ -28,11 +28,12 @@ function sendReminders() {
       const eventTitle = sheetName;
       const book = eventValues[row][2];
       const range = eventValues[row][3];
-      const remarks = eventValues[row][4] ? eventValues[row][4] : "なし";
+      const document = eventValues[row][4] ? eventValues[row][4] : "なし";
+      const remarks = eventValues[row][5] ? eventValues[row][5] : "なし";
 
       // 日付が合致した場合にメッセージを送信します（タイムゾーンに注意）
       if (date.getTime() === today.getTime()) {
-        const message = `今日は${startTime}から${eventTitle}があります。\n書籍：${book}（範囲：${range}）\n備考：${remarks}`;
+        const message = `今日は${startTime}から${eventTitle}があります。\n書籍：${book}（範囲：${range}）\n資料：${document}\n備考：${remarks}`;
         sendToMattermost(webhookURL, message);
       }
     }
