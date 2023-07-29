@@ -39,6 +39,7 @@ Created new Google Sheets Add-on script: https://script.google.com/d/xxxxxxxxxx/
 
 # コードをプロジェクトにpushする
 clasp push
+
 # 以下の選択肢にはyで回答
 ? Manifest file has been updated. Do you want to push and overwrite? (y/N) y
 ```
@@ -67,3 +68,7 @@ GAS を動作させるためのトリガー情報を設定する。
 
 - 設定例
   [![Image from Gyazo](https://i.gyazo.com/4df008af642a5b3ef8eb438707a7ee47.png)](https://gyazo.com/4df008af642a5b3ef8eb438707a7ee47)
+
+### お願い
+
+構築中に「xxx で権限エラーになった」「API 実行の認証設定が必要だった」のようなことがありましたらご連絡ください 🙏
