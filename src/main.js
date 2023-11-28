@@ -33,7 +33,7 @@ function sendReminders() {
 
       // 日付が合致した場合にメッセージを送信します（タイムゾーンに注意）
       if (date.getTime() === today.getTime()) {
-        const message = `今日は${startTime}から${eventTitle}があります。\n書籍：${book}（範囲：${range}）\n資料：${document}\n備考：${remarks}`;
+        const message = `本日${startTime}からの${eventTitle}の案内です。\n書籍：${book}（範囲：${range}）\n資料：${document}\n備考：${remarks}`;
         sendToMattermost(webhookURL, message);
       }
     }
