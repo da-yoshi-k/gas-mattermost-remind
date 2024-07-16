@@ -9,6 +9,7 @@ function sendReminders() {
     const enabled = settingsData[i][0]; // 有効/無効
     const sheetName = settingsData[i][1]; // シート名
     const webhookURL = settingsData[i][2]; // MattermostのWebhook URL
+    const discordURL = settingsData[i][3]; // DiscordのWebhook URL
     const targetSheet = spreadsheet.getSheetByName(sheetName);
 
     // enabledがfalseの場合または対象のシートが存在しない場合は処理をスキップします
@@ -34,7 +35,8 @@ function sendReminders() {
       // 日付が合致した場合にメッセージを送信します（タイムゾーンに注意）
       if (date.getTime() === today.getTime()) {
         const message = `本日${startTime}からの${eventTitle}の案内です。\n書籍：${book}（範囲：${range}）\n資料：${document}\n備考：${remarks}`;
-        sendToMattermost(webhookURL, message);
+        if (webhookURL) sendToMattermost(webhookURL, message);
+        if (discordURL) sendToDiscord(discordURL, message);
       }
     }
   }
@@ -42,6 +44,16 @@ function sendReminders() {
 
 function sendToMattermost(webhookURL, message) {
   const payload = { text: message };
+  const options = {
+    method: "post",
+    contentType: "application/json",
+    payload: JSON.stringify(payload),
+  };
+  UrlFetchApp.fetch(webhookURL, options);
+}
+
+function sendToDiscord(webhookURL, message) {
+  const payload = { content: message };
   const options = {
     method: "post",
     contentType: "application/json",
