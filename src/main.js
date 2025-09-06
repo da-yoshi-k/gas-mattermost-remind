@@ -28,7 +28,6 @@ function sendReminders() {
       const startTime = eventValues[row][1];
       const eventTitle = sheetName;
       const eventFlag = eventValues[row][2];
-      console.log(eventFlag); // 初回実行時のデバッグ用
       const book = eventValues[row][3];
       const range = eventValues[row][4];
       const document = eventValues[row][5] ? eventValues[row][5] : "なし";
