@@ -41,11 +41,10 @@ function sendReminders() {
         if (discordURL) sendToDiscord(discordURL, message);
       }
 
-      // 出欠確認を送る何日前か（例: 2なら2日後開催分に送信）
-      const ATTENDANCE_CONFIRM_DAYS_BEFORE = 2;
-
       // 開催フラグがTRUEで、2日後開催なら出欠確認メッセージを送信
       // 例）火曜開催なら日曜に送信
+      // 出欠確認を送る何日前か（例: 2なら2日後開催分に送信）
+      const ATTENDANCE_CONFIRM_DAYS_BEFORE = 2;
       const msPerDay = 24 * 60 * 60 * 1000;
       const attendanceConfirmDate = new Date(
         today.getTime() + ATTENDANCE_CONFIRM_DAYS_BEFORE * msPerDay
@@ -55,7 +54,7 @@ function sendReminders() {
         date.getTime() === attendanceConfirmDate.getTime()
       ) {
         const checkMessage = `<<次回の出欠確認>>\n:sanka: :husanka: :ROM: スタンプで表明お願いします。書籍：${book}（範囲：${range}）\n確約ではないので、当日体調不良・業務都合で不参加の場合はスタンプを変えたり、やっぱり参加できませんとコメントするとかでも可。\n参加4人以上で決行です。`;
-        if (webhookURL) sendToMattermost(webhookURL, checkMessage);
+        // Mattermostには非対応
         if (discordURL) sendToDiscord(discordURL, checkMessage);
       }
     }
