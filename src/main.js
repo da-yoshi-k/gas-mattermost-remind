@@ -27,10 +27,12 @@ function sendReminders() {
       const date = new Date(eventValues[row][0]);
       const startTime = eventValues[row][1];
       const eventTitle = sheetName;
-      const book = eventValues[row][2];
-      const range = eventValues[row][3];
-      const document = eventValues[row][4] ? eventValues[row][4] : "なし";
-      const remarks = eventValues[row][5] ? eventValues[row][5] : "なし";
+      const eventFlag = eventValues[row][2];
+      console.log(eventFlag); // 初回実行時のデバッグ用
+      const book = eventValues[row][3];
+      const range = eventValues[row][4];
+      const document = eventValues[row][5] ? eventValues[row][5] : "なし";
+      const remarks = eventValues[row][6] ? eventValues[row][6] : "なし";
 
       // 日付が合致した場合にメッセージを送信します（タイムゾーンに注意）
       if (date.getTime() === today.getTime()) {
@@ -38,12 +40,30 @@ function sendReminders() {
         if (webhookURL) sendToMattermost(webhookURL, message);
         if (discordURL) sendToDiscord(discordURL, message);
       }
+
+      // 出欠確認を送る何日前か（例: 2なら2日後開催分に送信）
+      const ATTENDANCE_CONFIRM_DAYS_BEFORE = 2;
+
+      // 開催フラグがTRUEで、2日後開催なら出欠確認メッセージを送信
+      // 例）火曜開催なら日曜に送信
+      const msPerDay = 24 * 60 * 60 * 1000;
+      const attendanceConfirmDate = new Date(
+        today.getTime() + ATTENDANCE_CONFIRM_DAYS_BEFORE * msPerDay
+      );
+      if (
+        (eventFlag === true || eventFlag === "TRUE") &&
+        date.getTime() === attendanceConfirmDate.getTime()
+      ) {
+        const checkMessage = `<<次回の出欠確認>>\n:sanka: :husanka: :ROM: スタンプで表明お願いします。書籍：${book}（範囲：${range}）\n確約ではないので、当日体調不良・業務都合で不参加の場合はスタンプを変えたり、やっぱり参加できませんとコメントするとかでも可。\n参加4人以上で決行です。`;
+        if (webhookURL) sendToMattermost(webhookURL, checkMessage);
+        if (discordURL) sendToDiscord(discordURL, checkMessage);
+      }
     }
   }
 }
 
 function sendToMattermost(webhookURL, message) {
-  const payload = { text: message };
+  const payload = {text: message};
   const options = {
     method: "post",
     contentType: "application/json",
@@ -53,7 +73,7 @@ function sendToMattermost(webhookURL, message) {
 }
 
 function sendToDiscord(webhookURL, message) {
-  const payload = { content: message };
+  const payload = {content: message};
   const options = {
     method: "post",
     contentType: "application/json",
