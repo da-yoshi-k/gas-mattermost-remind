@@ -49,13 +49,16 @@ function sendReminders() {
       const attendanceConfirmDate = new Date(
         today.getTime() + ATTENDANCE_CONFIRM_DAYS_BEFORE * msPerDay
       );
-      if (
-        (eventFlag === true || eventFlag === "TRUE") &&
-        date.getTime() === attendanceConfirmDate.getTime()
-      ) {
-        const checkMessage = `<<次回の出欠確認>>\n:sanka: :husanka: :ROM: スタンプで表明お願いします。書籍：${book}（範囲：${range}）\n確約ではないので、当日体調不良・業務都合で不参加の場合はスタンプを変えたり、やっぱり参加できませんとコメントするとかでも可。\n参加4人以上で決行です。`;
-        // Mattermostには非対応
+      if (eventFlag && date.getTime() === attendanceConfirmDate.getTime()) {
+        const checkMessage = `<<次回(${
+          date.getMonth() + 1
+        }/${date.getDate()})の出欠確認>>\n
+        :sanka: :husanka: :ROM: スタンプで表明お願いします。\n
+        書籍：${book}（範囲：${range}）\n
+        確約ではないので、当日体調不良・業務都合で不参加の場合はスタンプを変えたり、やっぱり参加できませんとコメントするとかでも可。\n
+        参加4人以上で決行です。`;
         if (discordURL) sendToDiscord(discordURL, checkMessage);
+        // Mattermostには非対応
       }
     }
   }
