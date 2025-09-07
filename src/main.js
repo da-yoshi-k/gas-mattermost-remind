@@ -51,11 +51,7 @@ function sendReminders() {
       if (eventFlag && date.getTime() === attendanceConfirmDate.getTime()) {
         const checkMessage = `<<次回(${
           date.getMonth() + 1
-        }/${date.getDate()})の出欠確認>>\n
-        :sanka: :husanka: :ROM: スタンプで表明お願いします。\n
-        書籍：${book}（範囲：${range}）\n
-        確約ではないので、当日体調不良・業務都合で不参加の場合はスタンプを変えたり、やっぱり参加できませんとコメントするとかでも可。\n
-        参加4人以上で決行です。`;
+        }/${date.getDate()})の出欠確認>>\n<:sanka:1351565050762100810> <:husanka:1351565114792345661> <:ROM:1356632644124803162> スタンプで表明お願いします。\n書籍：${book}（範囲：${range}）\n確約ではないので、当日体調不良・業務都合で不参加の場合はスタンプを変えたり、やっぱり参加できませんとコメントするとかでも可。\n参加4人以上で決行です。`;
         if (discordURL) sendToDiscord(discordURL, checkMessage);
         // Mattermostには非対応
       }
