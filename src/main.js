@@ -46,7 +46,7 @@ function sendReminders() {
       const ATTENDANCE_CONFIRM_DAYS_BEFORE = 2;
       const msPerDay = 24 * 60 * 60 * 1000;
       const attendanceConfirmDate = new Date(
-        today.getTime() + ATTENDANCE_CONFIRM_DAYS_BEFORE * msPerDay
+        today.getTime() + ATTENDANCE_CONFIRM_DAYS_BEFORE * msPerDay,
       );
       if (eventFlag && date.getTime() === attendanceConfirmDate.getTime()) {
         const checkMessage = `<<次回(${
@@ -70,11 +70,28 @@ function sendToMattermost(webhookURL, message) {
 }
 
 function sendToDiscord(webhookURL, message) {
+  const maxAttempts = 5;
+  const retryIntervalMs = 1000;
   const payload = {content: message};
   const options = {
     method: "post",
     contentType: "application/json",
     payload: JSON.stringify(payload),
+    muteHttpExceptions: true,
   };
-  UrlFetchApp.fetch(webhookURL, options);
+
+  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+    const response = UrlFetchApp.fetch(webhookURL, options);
+    const statusCode = response.getResponseCode();
+
+    if (statusCode >= 200 && statusCode < 300) return;
+
+    if (statusCode !== 429 || attempt === maxAttempts) {
+      throw new Error(
+        `Discordへの送信に失敗しました。status=${statusCode}, body=${response.getContentText()}`,
+      );
+    }
+
+    Utilities.sleep(retryIntervalMs);
+  }
 }
