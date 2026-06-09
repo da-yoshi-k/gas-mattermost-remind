@@ -70,8 +70,11 @@ function sendToMattermost(webhookURL, message) {
 }
 
 function sendToDiscord(webhookURL, message) {
-  const maxAttempts = 5;
-  const retryIntervalMs = 1000;
+  const maxAttempts = 10;
+  const baseRetryIntervalMs = 1000;
+  const cloudflare1015RetryIntervalMs = 10000;
+  const maxTotalSleepMs = 240000;
+  let totalSleepMs = 0;
   const payload = {content: message};
   const options = {
     method: "post",
@@ -83,15 +86,64 @@ function sendToDiscord(webhookURL, message) {
   for (let attempt = 1; attempt <= maxAttempts; attempt++) {
     const response = UrlFetchApp.fetch(webhookURL, options);
     const statusCode = response.getResponseCode();
+    const responseBody = response.getContentText();
 
-    if (statusCode >= 200 && statusCode < 300) return;
+    if (statusCode >= 200 && statusCode < 300) {
+      if (attempt > 1) {
+        console.log(`Discordへの送信に成功しました。attempt=${attempt}`);
+      }
+      return;
+    }
 
     if (statusCode !== 429 || attempt === maxAttempts) {
       throw new Error(
-        `Discordへの送信に失敗しました。status=${statusCode}, body=${response.getContentText()}`,
+        `Discordへの送信に失敗しました。attempt=${attempt}, status=${statusCode}, body=${responseBody}`,
       );
     }
 
-    Utilities.sleep(retryIntervalMs);
+    const retryAfterMs = responseBody.includes("error code: 1015")
+      ? cloudflare1015RetryIntervalMs
+      : getDiscordRetryAfterMs(
+          response,
+          responseBody,
+          baseRetryIntervalMs * Math.pow(2, attempt - 1),
+        );
+    console.warn(
+      `Discordから429が返されました。attempt=${attempt}/${maxAttempts}, retryAfterMs=${retryAfterMs}, body=${responseBody}`,
+    );
+
+    if (totalSleepMs + retryAfterMs > maxTotalSleepMs) {
+      throw new Error(
+        `Discordから長時間の送信制限を受けています。retryAfterMs=${retryAfterMs}, totalSleepMs=${totalSleepMs}, body=${responseBody}`,
+      );
+    }
+
+    Utilities.sleep(retryAfterMs);
+    totalSleepMs += retryAfterMs;
   }
+}
+
+function getDiscordRetryAfterMs(response, responseBody, fallbackMs) {
+  try {
+    const retryAfterSeconds = Number(JSON.parse(responseBody).retry_after);
+    if (retryAfterSeconds > 0) {
+      return Math.ceil(retryAfterSeconds * 1000) + 250;
+    }
+  } catch (error) {
+    // Cloudflareの429など、レスポンスがJSONではない場合はヘッダーを確認します。
+  }
+
+  const headers = response.getAllHeaders();
+  const retryAfterHeader = Object.keys(headers).find(
+    (name) => name.toLowerCase() === "retry-after",
+  );
+  const retryAfterSeconds = retryAfterHeader
+    ? Number(headers[retryAfterHeader])
+    : 0;
+
+  if (retryAfterSeconds > 0) {
+    return Math.ceil(retryAfterSeconds * 1000) + 250;
+  }
+
+  return fallbackMs;
 }
